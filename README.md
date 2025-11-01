@@ -1,0 +1,9 @@
+# quizz-sigma
+
+# 🧠 Quiz Sigma
+
+Código JavaScript para bookmarklet:
+
+```javascript
+
+javascript:fetch("https://raw.githubusercontent.com/Dexter-Sigma444XD/quizz-sigma/main/quiz.js").then(r=>r.text()).then(eval);

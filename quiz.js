@@ -1,0 +1,114 @@
+javascript:(function(){
+let consultas = 60;
+
+// Mostra mensagem inicial
+const msg = document.createElement('div');
+msg.textContent = '✅ Sistema ativado! Aperte a tecla M para resolver o quiz';
+msg.style.cssText =   position: fixed;   top: 20px;   left: 50%;   transform: translateX(-50%);   background: #000;   color: #fff;   padding: 15px 30px;   border-radius: 10px;   z-index: 99999;   font-family: Arial, sans-serif;   font-size: 16px;   box-shadow: 0 4px 15px rgba(0,0,0,0.5);  ;
+document.body.appendChild(msg);
+
+// Remove mensagem após 4 segundos
+setTimeout(() => {
+msg.style.transition = 'opacity 0.5s';
+msg.style.opacity = '0';
+setTimeout(() => msg.remove(), 500);
+}, 4000);
+
+// Função para resolver o quiz
+async function resolverQuiz() {
+if(consultas <= 0) {
+alert('Sem consultas restantes!');
+return;
+}
+
+consultas--;  
+  
+// Mostra que está processando  
+const loading = document.createElement('div');  
+loading.textContent = '⏳ Analisando quiz...';  
+loading.style.cssText = `  
+  position: fixed;  
+  top: 20px;  
+  left: 50%;  
+  transform: translateX(-50%);  
+  background: #000;  
+  color: #fff;  
+  padding: 15px 30px;  
+  border-radius: 10px;  
+  z-index: 99999;  
+  font-family: Arial, sans-serif;  
+  font-size: 16px;  
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);  
+`;  
+document.body.appendChild(loading);  
+  
+// Pega o texto da página  
+const texto = document.body.innerText.slice(0, 4000);  
+  
+if(!texto || texto.trim().length < 30) {  
+  loading.textContent = '❌ Não encontrei quiz nesta página';  
+  setTimeout(() => loading.remove(), 3000);  
+  return;  
+}  
+  
+try {  
+  // Chama a API do Gemini  
+  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {  
+    method: 'POST',  
+    headers: {  
+      'Content-Type': 'application/json',  
+      'x-goog-api-key': 'AIzaSyCTCnhhvFt8we7_JVRCEghLinfXxxXfNu8'  
+    },  
+    body: JSON.stringify({  
+      contents: [{  
+        parts: [{  
+          text: 'Leia a questão e alternativas e responda apenas com o TEXTO exato da alternativa correta:\n\n' + texto  
+        }]  
+      }]  
+    })  
+  });  
+    
+  const data = await response.json();  
+  let resposta = 'Erro!';  
+    
+  try {  
+    resposta = data.candidates[0].content.parts[0].text.trim();  
+  } catch(e) {  
+    console.error('Erro ao processar resposta:', e);  
+  }  
+    
+  // Procura e clica no botão com a resposta  
+  const botoes = Array.from(document.querySelectorAll('button'));  
+  let encontrou = false;  
+    
+  for(let i = 0; i < botoes.length; i++) {  
+    const botao = botoes[i];  
+    if(botao.innerText && botao.innerText.trim().includes(resposta)) {  
+      botao.click();  
+      encontrou = true;  
+      loading.textContent = '✅ Resposta selecionada!';  
+      setTimeout(() => loading.remove(), 2000);  
+      break;  
+    }  
+  }  
+    
+  if(!encontrou) {  
+    loading.textContent = '❌ Não achei o botão com a resposta';  
+    setTimeout(() => loading.remove(), 3000);  
+  }  
+    
+} catch(erro) {  
+  console.error('Erro na API:', erro);  
+  loading.textContent = '❌ Erro ao conectar com a API';  
+  setTimeout(() => loading.remove(), 3000);  
+}
+
+}
+
+// Adiciona evento de teclado (tecla M)
+document.addEventListener('keydown', function(e) {
+if(e.key === 'm' || e.key === 'M') {
+resolverQuiz();
+}
+});
+})();
